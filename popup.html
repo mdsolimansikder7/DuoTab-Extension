@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>DuoTab</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <img class="brand-icon" src="icons/icon48.png" alt="" width="32" height="32" />
+      <div class="brand-text">
+        <h1>DuoTab</h1>
+        <p>Multi-login tab sessions</p>
+      </div>
+    </div>
+
+    <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch theme" title="Switch theme">
+      <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+      </svg>
+      <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+      </svg>
+    </button>
+  </header>
+
+  <nav class="view-tabs" role="tablist" aria-label="DuoTab views">
+    <button id="view-live-tab" class="view-tab is-active" type="button" role="tab"
+      aria-selected="true" aria-controls="panel-live">Live sessions</button>
+    <button id="view-saved-tab" class="view-tab" type="button" role="tab"
+      aria-selected="false" aria-controls="panel-saved">Saved windows</button>
+  </nav>
+
+  <main class="app-main">
+    <!-- Live multi-login session tabs -->
+    <section id="panel-live" class="view-panel" role="tabpanel" aria-labelledby="view-live-tab">
+      <p id="this-tab-pill" class="this-tab-pill">
+        <span id="this-tab-dot" class="pill-dot" hidden></span>
+        <span id="this-tab-label">This tab: not in a session</span>
+      </p>
+
+      <section class="live-create-card" aria-labelledby="default-url-label">
+        <label id="default-url-label" class="field-label" for="default-url">Default page for new tabs</label>
+        <input
+          id="default-url"
+          class="text-input"
+          type="text"
+          placeholder="about:blank or https://example.com"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="new-session-button" class="primary-button full-button" type="button">+ New session tab</button>
+        <div class="create-many-row">
+          <label class="small-label" for="many-count">Create many</label>
+          <input id="many-count" class="count-input" type="number" min="1" max="100" value="5" inputmode="numeric" />
+          <button id="many-button" class="secondary-button" type="button">Create</button>
+        </div>
+        <p class="hint">Free, no account needed. Unlimited sessions.</p>
+      </section>
+
+      <p id="live-status" class="status" role="status" aria-live="polite" hidden></p>
+
+      <div class="live-list-head">
+        <span class="field-label">Open sessions</span>
+        <span id="live-count" class="session-count"></span>
+      </div>
+
+      <section id="live-empty" class="empty-state compact" hidden>
+        <h2>No session tabs yet</h2>
+        <p>Pick a default page and click <strong>+ New session tab</strong>.</p>
+      </section>
+
+      <section id="live-list" class="live-list" aria-label="Open live sessions"></section>
+
+      <button id="reopen-button" class="reopen-button" type="button" aria-expanded="false">
+        <span>Reopen closed sessions</span>
+        <span id="closed-count" class="reopen-count"></span>
+      </button>
+      <section id="closed-list" class="closed-list" aria-label="Closed sessions" hidden></section>
+
+      <div class="live-backup">
+        <button id="live-export-button" class="footer-button" type="button">Export JSON</button>
+        <button id="live-import-button" class="footer-button" type="button">Import JSON</button>
+        <input id="live-import-file" type="file" accept=".json,application/json" hidden />
+      </div>
+    </section>
+
+    <!-- Existing saved-window feature -->
+    <section id="panel-saved" class="view-panel" role="tabpanel" aria-labelledby="view-saved-tab" hidden>
+      <section class="save-card" aria-labelledby="save-label">
+        <label id="save-label" class="field-label" for="session-name">Save this window</label>
+        <div class="save-row">
+          <input
+            id="session-name"
+            class="text-input"
+            type="text"
+            maxlength="80"
+            placeholder="Session name (optional)"
+            autocomplete="off"
+          />
+          <button id="save-button" class="primary-button" type="button">Save</button>
+        </div>
+      </section>
+
+      <div class="toolbar">
+        <label class="search-field" for="search-input">
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-3.3-3.3"></path>
+          </svg>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search sessions"
+            aria-label="Search sessions"
+            autocomplete="off"
+          />
+        </label>
+        <span id="session-count" class="session-count" aria-live="polite"></span>
+      </div>
+
+      <p id="status-message" class="status" role="status" aria-live="polite" hidden></p>
+
+      <section id="empty-state" class="empty-state" hidden>
+        <img class="empty-icon" src="icons/icon48.png" alt="" width="44" height="44" />
+        <h2 id="empty-title">No sessions yet</h2>
+        <p id="empty-text">Open the tabs you want to keep, then save this window.</p>
+      </section>
+
+      <section id="session-list" class="session-list" aria-label="Saved sessions"></section>
+
+      <footer class="app-footer">
+        <button id="export-button" class="footer-button" type="button">
+          <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12"></path>
+            <path d="m7 10 5 5 5-5"></path>
+            <path d="M5 21h14"></path>
+          </svg>
+          <span>Export JSON</span>
+        </button>
+        <button id="import-button" class="footer-button" type="button">
+          <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 16V4"></path>
+            <path d="m7 9 5-5 5 5"></path>
+            <path d="M5 21h14"></path>
+          </svg>
+          <span>Import JSON</span>
+        </button>
+        <input id="import-file" type="file" accept=".json,application/json" hidden />
+      </footer>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+  <script src="live.js"></script>
+</body>
+</html>

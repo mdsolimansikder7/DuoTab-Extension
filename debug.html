@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DuoTab Debug</title>
+  <style>
+    body { font-family: monospace; padding: 16px; font-size: 12px; max-width: 1000px; margin: 0 auto; }
+    .section { margin-bottom: 24px; }
+    h2 { margin: 0 0 8px; font-size: 14px; color: #333; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 4px; overflow: auto; max-height: 400px; }
+    button { padding: 8px 16px; margin-right: 8px; cursor: pointer; }
+    .tab-map { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+    .tab-entry { background: #f0f0f0; padding: 8px; border-radius: 4px; }
+    .rule { background: #fff; border: 1px solid #ddd; padding: 8px; margin: 4px 0; border-radius: 4px; }
+    .rule-header { font-weight: bold; color: #666; }
+    .jar-entry { background: #f9f9f9; padding: 8px; margin: 4px 0; border-radius: 4px; }
+    .cookie { font-family: monospace; font-size: 11px; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <h1>DuoTab Debug Panel</h1>
+  
+  <div class="section">
+    <button id="btn-dump">Full Dump (debug-dump)</button>
+    <button id="btn-rules">Rules by Tab (debug-rules)</button>
+    <button id="btn-clear-rules">Clear All Rules</button>
+    <button id="btn-test-cookies">Run Cookie Test</button>
+  </div>
+
+  <div class="section">
+    <h2>Tab → Session Map</h2>
+    <div id="tab-map" class="tab-map"></div>
+  </div>
+
+  <div class="section">
+    <h2>Session Jars</h2>
+    <div id="jars"></div>
+  </div>
+
+  <div class="section">
+    <h2>DeclarativeNetRequest Rules (by Tab)</h2>
+    <div id="rules"></div>
+  </div>
+
+  <div class="section">
+    <h2>Full Debug Output</h2>
+    <pre id="full-output"></pre>
+  </div>
+
+  <script>
+    const output = document.getElementById('full-output');
+    const tabMapEl = document.getElementById('tab-map');
+    const jarsEl = document.getElementById('jars');
+    const rulesEl = document.getElementById('rules');
+
+    function log(msg, data) {
+      const line = document.createElement('div');
+      line.textContent = msg + (data ? ' ' + JSON.stringify(data, null, 2) : '');
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function renderTabMap(map, sessions) {
+      tabMapEl.innerHTML = '';
+      if (!map || Object.keys(map).length === 0) {
+        tabMapEl.textContent = '(empty)';
+        return;
+      }
+      for (const [tabId, sessionId] of Object.entries(map)) {
+        const session = sessions.find(s => s.id === sessionId);
+        const entry = document.createElement('div');
+        entry.className = 'tab-entry';
+        entry.innerHTML = `<strong>Tab ${tabId}</strong> → Session ${sessionId} (${session ? 'Session ' + session.number : 'unknown'})`;
+        tabMapEl.appendChild(entry);
+      }
+    }
+
+    function renderJars(jars) {
+      jarsEl.innerHTML = '';
+      if (!jars || Object.keys(jars).length === 0) {
+        jarsEl.textContent = '(empty)';
+        return;
+      }
+      for (const [sessionId, jar] of Object.entries(jars)) {
+        const entry = document.createElement('div');
+        entry.className = 'jar-entry';
+        const cookies = jar.cookies || [];
+        entry.innerHTML = `<strong>Session ${sessionId}</strong> — ${cookies.length} cookie(s)`;
+        if (cookies.length > 0) {
+          const list = document.createElement('div');
+          list.className = 'cookie';
+          list.textContent = cookies.map(c => `${c.name}=${c.value} (domain: ${c.domain}, path: ${c.path})`).join('\n');
+          entry.appendChild(list);
+        }
+        jarsEl.appendChild(entry);
+      }
+    }
+
+    function renderRules(rulesByTab) {
+      rulesEl.innerHTML = '';
+      if (!rulesByTab || Object.keys(rulesByTab).length === 0) {
+        rulesEl.textContent = '(no session rules)';
+        return;
+      }
+      for (const [tabId, rules] of Object.entries(rulesByTab)) {
+        const container = document.createElement('div');
+        container.className = 'jar-entry';
+        container.innerHTML = `<strong>Tab ${tabId}</strong> — ${rules.length} rule(s)`;
+        for (const rule of rules) {
+          const ruleEl = document.createElement('div');
+          ruleEl.className = 'rule';
+          ruleEl.innerHTML = `
+            <div class="rule-header">Rule ${rule.id} (priority ${rule.priority})</div>
+            <div>Action: ${JSON.stringify(rule.action)}</div>
+            <div>Condition: ${JSON.stringify(rule.condition)}</div>
+          `;
+          container.appendChild(ruleEl);
+        }
+        rulesEl.appendChild(container);
+      }
+    }
+
+    async function sendMessage(type) {
+      return new Promise((resolve) => {
+        chrome.runtime.sendMessage({ type }, resolve);
+      });
+    }
+
+    document.getElementById('btn-dump').onclick = async () => {
+      output.textContent = '';
+      log('Requesting debug-dump...');
+      const resp = await sendMessage('debug-dump');
+      log('Response:', resp);
+      if (resp.ok) {
+        renderTabMap(resp.tabMap, resp.sessions);
+        renderJars(resp.jars);
+      }
+    };
+
+    document.getElementById('btn-rules').onclick = async () => {
+      output.textContent = '';
+      log('Requesting debug-rules...');
+      const resp = await sendMessage('debug-rules');
+      log('Response:', resp);
+      if (resp.ok) {
+        renderRules(resp.rulesByTab);
+      }
+    };
+
+    document.getElementById('btn-clear-rules').onclick = async () => {
+      output.textContent = '';
+      log('Clearing all rules via background...');
+      // We can't directly call clearAllRoutingRules from here, but we can trigger it
+      // by sending a message that does it, or just reload the extension
+      log('Reload extension to clear rules.');
+    };
+
+    document.getElementById('btn-test-cookies').onclick = async () => {
+      output.textContent = '';
+      log('Cookie test: open Session A -> /cookies/set?name=one, then check Session B -> /cookies');
+      log('Run manually in tabs and watch service worker console.');
+    };
+
+    // Auto-load on open
+    (async () => {
+      const resp = await sendMessage('debug-dump');
+      if (resp.ok) {
+        renderTabMap(resp.tabMap, resp.sessions);
+        renderJars(resp.jars);
+      }
+      const rulesResp = await sendMessage('debug-rules');
+      if (rulesResp.ok) {
+        renderRules(rulesResp.rulesByTab);
+      }
+    })();
+  </script>
+</body>
+</html>

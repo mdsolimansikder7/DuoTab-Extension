@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "DuoTab Phase 2 PoC",
+  "version": "0.1.0",
+  "description": "Small feasibility test for per-tab cookie isolation in MV3.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "cookies",
+    "webRequest",
+    "declarativeNetRequest",
+    "scripting"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "DuoTab Phase 2 PoC",
+    "default_popup": "poc.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-bridge.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-main.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    }
+  ]
+}

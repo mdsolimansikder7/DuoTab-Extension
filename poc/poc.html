@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DuoTab Phase 2 PoC</title>
+  <style>
+    body {
+      width: 520px;
+      margin: 0;
+      padding: 14px;
+      font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: #eef0f6;
+      background: #0e1016;
+    }
+    h1 { margin: 0 0 4px; font-size: 17px; }
+    p { margin: 0 0 12px; color: #9ba2b5; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    button {
+      padding: 7px 10px;
+      border: 1px solid #2a2f3d;
+      border-radius: 8px;
+      background: #202430;
+      color: #eef0f6;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { border-color: #6366f1; }
+    button.primary { background: #6366f1; border-color: #6366f1; color: #fff; }
+    pre {
+      max-height: 440px;
+      margin: 0;
+      padding: 10px;
+      overflow: auto;
+      border: 1px solid #2a2f3d;
+      border-radius: 8px;
+      background: #171a22;
+      color: #c3c8d4;
+      font: 11px/1.5 Consolas, monospace;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    #status { min-height: 18px; margin: 8px 0; color: #75e0a7; }
+  </style>
+</head>
+<body>
+  <h1>DuoTab Phase 2 PoC</h1>
+  <p>Tests only. The real extension is not changed by this folder.</p>
+  <div class="row">
+    <button id="run-all" class="primary" type="button">Run all tests</button>
+    <button data-action="run-a" type="button">a: read Set-Cookie</button>
+    <button data-action="run-b" type="button">b: block Set-Cookie</button>
+    <button data-action="run-c" type="button">c: rewrite Cookie</button>
+    <button data-action="run-d" type="button">d: document.cookie</button>
+    <button data-action="run-e" type="button">e: shared jar</button>
+    <button data-action="run-f" type="button">f: cookie timing</button>
+  </div>
+  <div id="status"></div>
+  <pre id="output">Loading saved results...</pre>
+  <script src="poc.js"></script>
+</body>
+</html>
